@@ -95,56 +95,10 @@ class DataBase():
 
 class LangChain():
     def __init__(self, api_key, db):
+        self.db = db
         self.openai = openai
         self.openai.api_key = api_key
-        self.db = db
-
-    def send_message(self, message_log, functions, gpt_model="gpt-3.5-turbo", temperature=0.1):
-        response = self.openai.ChatCompletion.create(
-            model=gpt_model,
-            messages=message_log,
-            temperature=temperature,
-            functions=functions,
-            function_call='auto',
-        )
-
-        response_message = response["choices"][0]["message"]
-
-        if response_message.get("function_call"):
-            available_functions = {
-                "get_data_from_db": self.db.get_data_from_db,
-            }
-            function_name = response_message["function_call"]["name"]
-            fuction_to_call = available_functions[function_name]
-            function_args = json.loads(response_message["function_call"]["arguments"])
-            # 사용하는 함수에 따라 사용하는 인자의 개수와 내용이 달라질 수 있으므로
-            # **function_args로 처리하기
-            function_response = fuction_to_call(**function_args)
-
-            # 함수를 실행한 결과를 GPT에게 보내 답을 받아오기 위한 부분
-            message_log.append(response_message)  # GPT의 지난 답변을 message_logs에 추가하기
-            message_log.append(
-                {
-                    "role": "function",
-                    "name": function_name,
-                    "content": function_response,
-                }
-            )  # 함수 실행 결과도 GPT messages에 추가하기
-            response = self.openai.ChatCompletion.create(
-                model=gpt_model,
-                messages=message_log,
-                temperature=temperature,
-                # max_tokens=4096
-            )  # 함수 실행 결과를 GPT에 보내 새로운 답변 받아오기
-        return response.choices[0].message.content
-
-
-class GUI():
-    def __init__(self, langchain):
-        self.langchain = langchain
-        self.user_entry = None
-        self.window = None
-        self.conversation = None
+        self.llm = ChatOpenAI(temperature=0.8)
 
         self.message_log = [
             {
@@ -171,6 +125,57 @@ class GUI():
                 },
             }
         ]
+    
+    def add_message_log(self, msg):
+        self.message_log.append(msg)
+
+    def send_message(self, gpt_model="gpt-3.5-turbo", temperature=0.1):
+        response = self.openai.ChatCompletion.create(
+            model=gpt_model,
+            messages=self.message_log,
+            temperature=temperature,
+            functions=self.functions,
+            function_call='auto',
+        )
+
+        response_message = response["choices"][0]["message"]
+
+        if response_message.get("function_call"):
+            available_functions = {
+                "get_data_from_db": self.db.get_data_from_db,
+            }
+            function_name = response_message["function_call"]["name"]
+            fuction_to_call = available_functions[function_name]
+            function_args = json.loads(response_message["function_call"]["arguments"])
+            # 사용하는 함수에 따라 사용하는 인자의 개수와 내용이 달라질 수 있으므로
+            # **function_args로 처리하기
+            function_response = fuction_to_call(**function_args)
+
+            # 함수를 실행한 결과를 GPT에게 보내 답을 받아오기 위한 부분
+            self.add_message_log(response_message)  # GPT의 지난 답변을 message_logs에 추가하기
+            self.add_message_log(
+                {
+                    "role": "function",
+                    "name": function_name,
+                    "content": function_response,
+                }
+            )  # 함수 실행 결과도 GPT messages에 추가하기
+            response = self.openai.ChatCompletion.create(
+                model=gpt_model,
+                messages=self.message_log,
+                temperature=temperature,
+                # max_tokens=4096
+            )  # 함수 실행 결과를 GPT에 보내 새로운 답변 받아오기
+        return response.choices[0].message.content
+
+
+
+class GUI():
+    def __init__(self, langchain):
+        self.langchain = langchain
+        self.user_entry = None
+        self.window = None
+        self.conversation = None
 
     def run(self):
         self.window = tk.Tk()
@@ -238,16 +243,16 @@ class GUI():
             self.window.destroy()
             return
 
-        self.message_log.append({"role": "user", "content": user_input})
+        self.langchain.add_message_log({"role": "user", "content": user_input})
         self.conversation.config(state=tk.NORMAL)  # 이동
         self.conversation.insert(tk.END, f"You: {user_input}\n", "user")  # 이동
         thinking_popup = self.show_popup_message("처리중...")
         self.window.update_idletasks()
         # '생각 중...' 팝업 창이 반드시 화면에 나타나도록 강제로 설정하기
-        response = self.langchain.send_message(self.message_log, self.functions)
+        response = self.langchain.send_message()
         thinking_popup.destroy()
 
-        self.message_log.append({"role": "assistant", "content": response})
+        self.langchain.add_message_log({"role": "assistant", "content": response})
 
         # 태그를 추가한 부분(1)
         self.conversation.insert(tk.END, f"gpt assistant: {response}\n", "assistant")
