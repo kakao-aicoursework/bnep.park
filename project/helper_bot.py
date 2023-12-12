@@ -1,3 +1,10 @@
+# langchain 사용
+# default: zero-short
+# 여유가 된다면, 외부 api 사용
+# 카톡에 연동시킬 것
+
+
+
 import os
 import json
 import openai
@@ -241,5 +248,5 @@ def main():
 
 
 if __name__ == "__main__":
-    db_initialize("카카오톡채널")
+    db_initialize("카카오톡싱크")
     main()
