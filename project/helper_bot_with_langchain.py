@@ -99,16 +99,10 @@ class LangChain():
         self.openai = openai
         self.openai.api_key = api_key
         self.llm = ChatOpenAI(temperature=0.8)
+        self.chain = None
 
-        self.message_log = [
-            {
-                "role": "system",
-                "content": f'''
-                너는 고객의 질문에 대답을 하는 상담사야. 내용은 질문에 대한 대답은 function 을 통해서 찾도록 해.
-                '''
-            }
-        ]
-
+        self.system_message = "너는 고객의 질문에 대답을 하는 상담사야. 내용은 질문에 대한 대답은 function 을 통해서 찾도록 해."
+        self.message_log = []
         self.functions = [
             {
                 "name": "get_data_from_db",
@@ -168,6 +162,26 @@ class LangChain():
             )  # 함수 실행 결과를 GPT에 보내 새로운 답변 받아오기
         return response.choices[0].message.content
 
+    def get_system_message_prompt(self):
+        return SystemMessage(content=self.system_message)
+
+    def get_human_message_prompt(self):
+        return HumanMessagePromptTemplate.from_template("{text}")
+    
+    def set_chain(self):
+        smp = self.get_system_message_prompt()
+        hmp = self.get_human_message_prompt()
+        chat_prompt = ChatPromptTemplate.from_messages([smp, hmp])
+        self.chain = LLMChain(llm=self.llm, prompt=chat_prompt)
+    
+    def get_txt_from_message_log(self):
+        txt = self.message_log[-1]["content"]
+        return txt
+
+    def run(self):
+        self.set_chain()
+        result = self.chain.run(text = self.get_txt_from_message_log())
+        return result
 
 
 class GUI():
@@ -249,7 +263,7 @@ class GUI():
         thinking_popup = self.show_popup_message("처리중...")
         self.window.update_idletasks()
         # '생각 중...' 팝업 창이 반드시 화면에 나타나도록 강제로 설정하기
-        response = self.langchain.send_message()
+        response = self.langchain.run()
         thinking_popup.destroy()
 
         self.langchain.add_message_log({"role": "assistant", "content": response})
