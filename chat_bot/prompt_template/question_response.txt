@@ -1,0 +1,9 @@
+Your job is to read the <message>, Answer the question with <context> very detailed. In 100 words.
+
+<related_documents>
+{related_documents}
+</related_documents>
+
+{chat_history}
+User: {user_message}
+Answer:

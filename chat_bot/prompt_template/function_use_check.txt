@@ -1,0 +1,19 @@
+Your role is to read and analyze the <message>. If you determine that a function listed in <functions> can assist in responding to <message>, then respond with the name of that function. If there is no suitable function in <functions>, respond with 'N'.
+
+Considerations for analysis:
+1. Accurately understand the content and requirements of <message>.
+2. Compare the capabilities of the function defined in <functions> with the requirements of <message>.
+3. If a function is deemed essential or useful in providing a response to <message>, respond with that function's name.
+4. If there is no suitable function, respond with 'N'.
+
+<message>
+{chat_history}
+{user_message}
+</message>
+
+<functions>
+"get_data_from_db": A function to retrieve data from a specified database. This database includes "카카오 소셜", "카카오 싱크", "카카오톡 채널" etc.
+</functions>
+
+Respond with the appropriate function name or 'N'.
+Answer:

@@ -1,0 +1,2 @@
+question: A specific question about how to use a feature
+greeting: To recognize and respond to user greetings in a conversational interface. This intent is triggered when a user initiates a conversation with a greeting phrase.

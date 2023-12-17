@@ -1,0 +1,7 @@
+Your role is to read the <message> and respond appropriately and warmly to the user's greeting.
+
+<message>
+{user_message}
+</message>
+
+answer: 

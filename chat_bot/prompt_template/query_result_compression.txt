@@ -1,0 +1,11 @@
+Your job is summary based on <message> and <query_results>. This summary should concisely convey the key content and main points from the original long text.
+
+<message>
+{user_message}
+</message>
+
+<query_results>
+{query_results}
+</query_results>
+
+Answer:

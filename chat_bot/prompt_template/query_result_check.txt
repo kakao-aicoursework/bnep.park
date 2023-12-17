@@ -1,0 +1,12 @@
+Your job is to read the <message>, If <query_results> can help you to answer the <message>, answer Y.
+
+<message>
+{user_message}
+</message>
+
+<query_results>
+{query_results}
+</query_results>
+
+You must answer Y or N.
+Answer:
